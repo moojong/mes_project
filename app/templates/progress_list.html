@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}공정진행{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">공정진행</h2>
+
+  <div class="card">
+    <div class="card-body">
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Order ID</th>
+            <th>제품</th>
+            <th>수량</th>
+            <th>상태</th>
+            <th>납기</th>
+            <th class="text-center">공정진행</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set status_map = {
+            'S0_PLANNED': '계획',
+            'S1_READY': '부품준비',
+            'S2_ASSEMBLY': '조립',
+            'S3_INSPECTION': '검사',
+            'S4_PACK': '포장',
+            'S5_DONE': '완료'
+          } %}
+
+          {% for it in items %}
+          {% set is_done = (it.status == 'S5_DONE') %}
+          {# 다음 단계 기본값 계산: S0->1, S1->2, S2->3, S3->4, S4->S5(=DONE) #}
+          {% set next_seq =
+               1 if it.status == 'S0_PLANNED' else
+               2 if it.status == 'S1_READY' else
+               3 if it.status == 'S2_ASSEMBLY' else
+               4 if it.status == 'S3_INSPECTION' else
+               5 if it.status == 'S4_PACK' else
+               None
+          %}
+          <tr>
+            <td class="text-nowrap"><a href="/work/orders/{{ it.order_id }}">{{ it.order_id }}</a></td>
+            <td>
+              <div class="text-nowrap">{{ it.product_id }}</div>
+              <small class="text-muted">{{ it.product_name or '' }}</small>
+            </td>
+            <td>{{ it.planned_qty }}</td>
+            <td>
+              {% if it.status == 'S5_DONE' %}
+                <span class="badge bg-success">{{ status_map[it.status] }}</span>
+              {% elif it.status in ['S1_READY','S2_ASSEMBLY','S3_INSPECTION','S4_PACK'] %}
+                <span class="badge bg-warning text-dark">{{ status_map[it.status] }}</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ status_map[it.status] }}</span>
+              {% endif %}
+            </td>
+            <td class="text-nowrap">{{ it.due_date.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td class="text-center">
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                data-bs-toggle="modal"
+                data-bs-target="#advanceModal"
+                data-order-id="{{ it.order_id }}"
+                data-next-seq="{{ next_seq }}"
+                {% if is_done %}disabled{% endif %}
+              >
+                공정진행
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+
+          {% if items|length == 0 %}
+          <tr><td colspan="6" class="text-center text-muted py-4">데이터가 없습니다.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+
+      <div class="text-muted small">총 {{ total }}건</div>
+    </div>
+  </div>
+</div>
+
+{# 공정진행 모달 #}
+<div class="modal fade" id="advanceModal" tabindex="-1" aria-labelledby="advanceModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="/work/progress" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="advanceModalLabel">공정 진행</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="order_id" id="adv-order-id" />
+
+        <div class="mb-3">
+          <label class="form-label">다음 공정</label>
+          <select name="operation_seq" id="adv-operation-seq" class="form-select" required>
+            {% for op in operations %}
+              <option value="{{ op.operation_seq }}">
+                {{ op.operation_seq }} — {{ op.operation_name }}
+              </option>
+            {% endfor %}
+          </select>
+          <div class="form-text">기본값은 현재 상태의 다음 단계로 설정됩니다.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">설비 (선택)</label>
+          <select name="equipment_id" class="form-select">
+            <option value="">선택안함</option>
+            {% for eq in equipments %}
+              <option value="{{ eq.equipment_id }}">{{ eq.equipment_id }} — {{ eq.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
+        <button type="submit" class="btn btn-primary">진행</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# 모달 데이터 주입 스크립트 #}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var advModal = document.getElementById('advanceModal');
+  advModal.addEventListener('show.bs.modal', function (event) {
+    var button = event.relatedTarget;
+    var orderId = button.getAttribute('data-order-id');
+    var nextSeq = button.getAttribute('data-next-seq');
+
+    // hidden 필드 세팅
+    document.getElementById('adv-order-id').value = orderId;
+
+    // 다음 단계 기본 선택
+    var opSelect = document.getElementById('adv-operation-seq');
+    if (nextSeq && opSelect) {
+      for (var i = 0; i < opSelect.options.length; i++) {
+        if (opSelect.options[i].value === String(nextSeq)) {
+          opSelect.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  });
+});
+</script>
+
+{% endblock %}

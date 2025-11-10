@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}생산실적 목록{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">생산실적</h2>
+
+  <div class="card">
+    <div class="card-body">
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>작업지시</th>
+            <th>제품</th>
+            <th>공정</th>
+            <th>설비</th>
+            <th>시작</th>
+            <th>종료</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in items %}
+          <tr>
+            <td class="text-nowrap">
+              <div class="text-nowrap">{{ it.order_id }}</div>
+            </td>
+            <td>
+              <div class="text-nowrap">{{ it.product_id }}</div>
+              <small class="text-muted">{{ it.product_name or '' }}</small>
+            </td>
+            <td>
+              <div class="text-nowrap">{{ it.operation_seq }}</div>
+              <small class="text-muted">{{ it.operation_name or '' }}</small>
+            </td>
+            <td>
+              <div class="text-nowrap">{{ it.equipment_id or '' }}</div>
+              <small class="text-muted">{{ it.equipment_name or '' }}</small>
+            </td>
+            <td class="text-nowrap">
+              {% if it.start_ts %}{{ it.start_ts.strftime('%Y-%m-%d %H:%M') }}{% else %}-{% endif %}
+            </td>
+            <td class="text-nowrap">
+              {% if it.end_ts %}{{ it.end_ts.strftime('%Y-%m-%d %H:%M') }}{% else %}-{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+
+          {% if items|length == 0 %}
+          <tr>
+            <td colspan="8" class="text-center text-muted py-4">데이터가 없습니다.</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+
+      <div class="text-muted small">총 {{ total }}건</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

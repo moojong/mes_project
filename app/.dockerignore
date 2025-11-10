@@ -1,0 +1,16 @@
+# Python cache
+__pycache__/
+
+# 환경설정파일
+.env
+
+# Git
+.git
+.gitignore
+
+# VSCODE
+.vscode/
+.idea/
+
+# Docker 로그
+*.log

@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+SQLAlchemy
+psycopg2-binary
+python-dotenv
+jinja2
+pydantic
+pydantic[email]
+python-multipart 
+bcrypt
+numpy==2.0.2
+pandas==2.2.2
+matplotlib==3.10.0
+seaborn==0.13.2
+joblib==1.5.2
+tensorflow==2.19.0
+scikit-learn==1.6.1

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}작업지시 목록{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">작업지시</h2>
+  <!-- 신규 작업지시 등록 폼 -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">신규 작업지시</h5>
+      <form method="post" action="/work/orders" class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">제품</label>
+          <select name="product_id" class="form-select" required>
+            <option value="">제품 선택...</option>
+            {% for p in products %}
+              <option value="{{ p.product_id }}">{{ p.product_id }} — {{ p.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">수량</label>
+          <input type="number" name="planned_qty" class="form-control" min="1" value="100" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">납기</label>
+          <input type="datetime-local" name="due_date" class="form-control" required>
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100">등록</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 필터/페이지네이션 없음: 전체 리스트 출력 -->
+  <div class="card">
+    <div class="card-body">
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Order ID</th>
+            <th>제품</th>
+            <th>수량</th>
+            <th>상태</th>
+            <th>납기</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in items %}
+          <tr>
+            <td><a href="/work/orders/{{ it.order_id }}">{{ it.order_id }}</a></td>
+            <td>
+              <div>{{ it.product_id }}</div>
+              <small class="text-muted">{{ it.product_name }}</small>
+            </td>
+            <td>{{ it.planned_qty }}</td>
+            <td>
+	            {% set status_map = {
+						    'S0_PLANNED': '계획',
+						    'S1_READY': '부품준비',
+						    'S2_ASSEMBLY': '조립',
+						    'S3_INSPECTION': '검사',
+						    'S4_PACK': '포장',
+						    'S5_DONE': '완료'
+						  } %}
+              {% if it.status == 'S5_DONE' %}
+						    <span class="badge bg-success">{{ status_map[it.status] }}</span>
+						  {% elif it.status in ['S1_READY', 'S2_ASSEMBLY', 'S3_INSPECTION', 'S4_PACK'] %}
+						    <span class="badge bg-warning text-dark">{{ status_map[it.status] }}</span>
+						  {% else %}
+						    <span class="badge bg-secondary">{{ status_map[it.status] }}</span>
+						  {% endif %}
+            </td>
+            <td>{{ it.due_date.strftime('%Y-%m-%d %H:%M') }}</td>
+          </tr>
+          {% endfor %}
+          {% if items|length == 0 %}
+          <tr><td colspan="5" class="text-center text-muted">데이터가 없습니다.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+
+      <div class="text-muted small">총 {{ total }}건</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

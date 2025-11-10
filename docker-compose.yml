@@ -1,0 +1,28 @@
+services:
+  server:
+    build:
+      context: ./app               # Dockerfile 위치
+      dockerfile: Dockerfile
+    container_name: fastapi-server
+    ports:
+      - "8000:8000"                # 호스트:컨테이너 포트 매핑
+    volumes:
+      - ./app:/app                 # 호스트 App 폴더를 컨테이너 /app에 마운트
+    depends_on:                    # 실행 의존성 
+      - db                         # db 컨테이너가 실행된 이후 실행    
+    env_file:
+      - .env                       # 환경 변수
+
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    restart: always                # 실패 시 자동 복구
+    ports:
+      - "5432:5432"                # 호스트:컨테이너 포트 매핑
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # 데이터 유지용 볼륨 (DB 파일 저장)
+    env_file:
+      - .env                       # 환경 변수
+
+volumes:
+  pgdata:                          # pgdata 볼륨 정의

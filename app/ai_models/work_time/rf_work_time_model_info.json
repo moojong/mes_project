@@ -1,0 +1,40 @@
+{
+  "features": [
+    "product_encoded",
+    "equipment_encoded",
+    "operation_seq",
+    "planned_qty"
+  ],
+  "label": "actual_time_sec",
+  "mae": 296.08,
+  "rmse": 514.99,
+  "score": 0.82,
+  "n_train": 1360,
+  "n_test": 340,
+  "product_classes": [
+    "GAS-300",
+    "HUMID-400",
+    "MULTI-500",
+    "MULTI-501",
+    "PRES-200",
+    "PRES-201",
+    "TEMP-100",
+    "TEMP-101",
+    "TEMP-102"
+  ],
+  "equipment_classes": [
+    "STN-A",
+    "STN-B",
+    "STN-C",
+    "STN-D",
+    "STN-INS-1",
+    "STN-INS-2",
+    "STN-INS-3",
+    "STN-PKG-1",
+    "STN-PKG-2",
+    "STN-PKG-3",
+    "STN-PREP-1",
+    "STN-PREP-2",
+    "STN-PREP-3"
+  ]
+}

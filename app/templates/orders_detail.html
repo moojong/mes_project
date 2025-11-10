@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}작업지시 상세{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">작업지시 상세</h4>
+    <a href="/work/orders" class="btn btn-outline-secondary btn-sm">← 목록</a>
+  </div>
+  
+  <form method="post" action="/work/orders/{{ order_id }}/update" class="card p-4">
+    <div class="mb-3">
+      <label class="form-label">작업지시 ID</label>
+      <input type="text" class="form-control bg-light" value="{{ order_id }}" readonly>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">제품</label>
+      <input type="text" class="form-control bg-light" value="{{ product_name }} ({{ product_id }})" readonly>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">계획 수량</label>
+      <input type="number" name="planned_qty" class="form-control" value="{{ planned_qty }}" min="1" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">상태</label>
+      <input type="text" class="form-control bg-light" value="{{ status }}" readonly>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">납기일시</label>
+      <input type="datetime-local" name="due_date" class="form-control"
+             value="{{ due_date.strftime('%Y-%m-%dT%H:%M') if due_date else '' }}" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">생성 시각</label>
+      <input type="text" class="form-control bg-light" value="{{ created_ts or '-' }}" readonly>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">시작 시각</label>
+      <input type="text" class="form-control bg-light" value="{{ start_ts or '-' }}" readonly>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">완료 시각</label>
+      <input type="text" class="form-control bg-light" value="{{ end_ts or '-' }}" readonly>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+      <button type="submit" class="btn btn-primary">수정</button>
+      <button type="submit" formaction="/work/orders/{{ order_id }}/delete" 
+              class="btn btn-danger"
+              onclick="return confirm('삭제하시겠습니까?')">삭제</button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

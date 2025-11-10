@@ -1,0 +1,20 @@
+{
+  "features": [
+    "month",
+    "day",
+    "day_of_week",
+    "week_of_year",
+    "production_lag_1",
+    "production_lag_6",
+    "production_lag_12",
+    "production_rolling_6",
+    "production_rolling_24",
+    "production_trend_6"
+  ],
+  "label": "",
+  "mae": 92.06,
+  "rmse": 125.15,
+  "score": 0.8,
+  "n_train": 50,
+  "n_test": 13
+}

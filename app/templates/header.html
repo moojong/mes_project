@@ -1,0 +1,34 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">MES</a>
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav me-auto">
+        <!-- 대시보드 -->
+        <li class="nav-item">
+          <a class="nav-link" href="/dashboard">대시보드</a>
+        </li>
+				<!-- 생산관리 드롭다운 -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarWork" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            생산관리
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarWork">
+            <li><a class="dropdown-item" href="/work/orders">작업지시</a></li>
+            <li><a class="dropdown-item" href="/work/progress">공정진행</a></li>
+            <li><a class="dropdown-item" href="/work/results">생산실적</a></li>
+          </ul>
+        </li>
+        <!-- 품질관리 드롭다운 -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarQuality" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            품질관리
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarQuality">
+            <li><a class="dropdown-item" href="/work/inspections">품질관리 등록</a></li>
+            <li><a class="dropdown-item" href="/work/quality_results">품질관리 결과</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
