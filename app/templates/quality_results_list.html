@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}품질검사 결과{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">품질검사 결과</h2>
+
+  <!-- 신규 검사 결과 등록 폼 -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">신규 검사 결과</h5>
+      <form method="post" action="/quality/results" class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">검사</label>
+          <select name="inspection_id" class="form-select" required>
+            <option value="">선택...</option>
+            {% for insp in inspections %}
+            <option value="{{ insp.inspection_id }}">
+              {{ insp.inspection_id }} - {{ insp.product_id }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">검사자</label>
+          <input type="text" name="inspector" class="form-control" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">합격수량</label>
+          <input type="number" name="passed_qty" class="form-control" min="0" value="0" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">불량수량</label>
+          <input type="number" name="defect_qty" class="form-control" min="0" value="0" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">불량코드</label>
+          <select name="defect_code" class="form-select">
+            <option value="">선택...</option>
+            {% for dc in defect_codes %}
+            <option value="{{ dc.defect_code }}">{{ dc.defect_code }} - {{ dc.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">검사 시작</label>
+          <input type="datetime-local" name="start_ts" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">검사 종료</label>
+          <input type="datetime-local" name="end_ts" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">비고</label>
+          <input type="text" name="notes" class="form-control">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100">등록</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 검사 결과 목록 -->
+  <div class="card">
+    <div class="card-body">
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>검사 ID</th>
+            <th>제품</th>
+            <th>검사자</th>
+            <th>합격</th>
+            <th>불량</th>
+            <th>불량률</th>
+            <th>불량유형</th>
+            <th>검사시간</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in items %}
+          <tr>
+            <td>{{ it.inspection_id }}</td>
+            <td>
+              <div>{{ it.product_id }}</div>
+              <small class="text-muted">{{ it.product_name }}</small>
+            </td>
+            <td>{{ it.inspector }}</td>
+            <td><span class="badge bg-success">{{ it.passed_qty }}</span></td>
+            <td><span class="badge bg-danger">{{ it.defect_qty }}</span></td>
+            <td>
+              {% if it.defect_rate > 5.0 %}
+                <span class="text-danger fw-bold">{{ "%.2f"|format(it.defect_rate) }}%</span>
+              {% else %}
+                {{ "%.2f"|format(it.defect_rate) }}%
+              {% endif %}
+            </td>
+            <td>
+              {% if it.defect_code %}
+              <small>{{ it.defect_code }}<br>{{ it.defect_name }}</small>
+              {% else %}
+              <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>{{ it.inspection_time }}초</td>
+          </tr>
+          {% endfor %}
+          {% if items|length == 0 %}
+          <tr>
+            <td colspan="8" class="text-center text-muted py-4">데이터가 없습니다.</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+      <div class="text-muted small">총 {{ total }}건</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

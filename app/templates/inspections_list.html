@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}품질검사 등록{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">품질검사 계획</h2>
+
+  <!-- 신규 품질검사 등록 폼 -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">신규 품질검사</h5>
+      <form method="post" action="/quality/inspections" class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">작업지시</label>
+          <select name="order_id" class="form-select" required onchange="updateProductInfo(this)">
+            <option value="">선택...</option>
+            {% for order in orders %}
+            <option value="{{ order.order_id }}" data-product="{{ order.product_id }}">
+              {{ order.order_id }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">제품</label>
+          <input type="text" name="product_id" id="product_id" class="form-control" readonly required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">검사수량</label>
+          <input type="number" name="inspection_qty" class="form-control" min="1" value="10" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">검사자</label>
+          <input type="text" name="inspector" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">검사예정일</label>
+          <input type="date" name="inspection_date" class="form-control" required>
+        </div>
+        <div class="col-md-9">
+          <label class="form-label">비고</label>
+          <input type="text" name="notes" class="form-control">
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100">등록</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 품질검사 목록 -->
+  <div class="card">
+    <div class="card-body">
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>검사 ID</th>
+            <th>작업지시</th>
+            <th>제품</th>
+            <th>검사수량</th>
+            <th>검사자</th>
+            <th>검사예정일</th>
+            <th>상태</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in items %}
+          <tr>
+            <td>
+              <a href="/quality/inspections/{{ it.inspection_id }}">
+                {{ it.inspection_id }}
+              </a>
+            </td>
+            <td>{{ it.order_id }}</td>
+            <td>
+              <div>{{ it.product_id }}</div>
+              <small class="text-muted">{{ it.product_name }}</small>
+            </td>
+            <td>{{ it.inspection_qty }}</td>
+            <td>{{ it.inspector }}</td>
+            <td>{{ it.inspection_date }}</td>
+            <td>
+              {% if it.status == 'COMPLETED' %}
+                <span class="badge bg-success">완료</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">대기</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          {% if items|length == 0 %}
+          <tr>
+            <td colspan="7" class="text-center text-muted py-4">데이터가 없습니다.</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+      <div class="text-muted small">총 {{ total }}건</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function updateProductInfo(select) {
+  const productId = select.options[select.selectedIndex].dataset.product;
+  document.getElementById('product_id').value = productId || '';
+}
+</script>
+{% endblock %}

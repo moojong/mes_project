@@ -26,26 +26,6 @@ def create_order(
     planned_qty: str = Form(...),   # 서비스에서 int로 변환
     due_date: str = Form(...),      # 서비스에서 datetime으로 변환
 ):
-    # AI 예측(sklearn 모델 사용)
-    work_time_service = get_work_time_sklearn_service()
-    
-    # 공정별 첫 번째 설비 매핑
-    operation_equipments = {
-        1: 'STN-PREP-1',   # 부품준비
-        2: 'STN-A',       # 조립
-        3: 'STN-INS-1',   # 검사
-        4: 'STN-PKG-1'    # 포장
-    }
-    
-    for op_seq in range(1, 5):
-        equipment_id = operation_equipments[op_seq]
-        prediction = work_time_service.predict(
-            product_id=product_id,
-            operation_seq=op_seq,
-            equipment_id=equipment_id,
-            planned_qty=int(planned_qty)
-        )
-        print(f"AI 예측 결과 (공정 {op_seq}, 설비 {equipment_id}):", prediction)
     svc.create_order(db, product_id, planned_qty, due_date)
     return RedirectResponse(url="/work/orders", status_code=303)
 
@@ -92,6 +72,7 @@ def list_results(request: Request, db: Session = Depends(get_db)):
         {"request": request, **data}
     )
 
+
 @router.get("/progress", response_class=HTMLResponse)
 def list_progress(request: Request, db: Session = Depends(get_db)):
 		# services/work.py 의 list_progress 함수 호출
@@ -100,7 +81,7 @@ def list_progress(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse(
         "progress_list.html",
         {"request": request, **data}
-    )
+    )    
 
 @router.post("/progress")
 def advance_progress(
@@ -111,26 +92,3 @@ def advance_progress(
 ):
     svc.advance_progress(db, order_id, operation_seq, equipment_id)
     return RedirectResponse(url="/work/progress", status_code=303)
-
-@router.get("/inspections", response_class=HTMLResponse)
-def get_inspections(request: Request, db: Session = Depends(get_db)):
-    orders = svc.list_orders(db)                 
-    inspections = svc.get_inspections(db)
-    return templates.TemplateResponse(
-        "quality_inspections.html",
-        {"request": request, "orders": orders, "inspections": inspections}
-    )
-
-@router.post("/inspections")
-def post_inspection(
-    db: Session = Depends(get_db),
-    order_id: str = Form(...),
-    product_id: str = Form(...),
-    inspection_qty: str = Form(...),
-    inspector: str = Form(None),
-    inspection_date: str = Form(...),
-    notes: str = Form(None)
-):
-    svc.advance_progress(db, order_id, product_id, inspection_qty, inspector, inspection_date, notes)
-    return RedirectResponse("/work/inspections", status_code=303)
-    
