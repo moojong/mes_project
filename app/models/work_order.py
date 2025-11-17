@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Enum, DateTime
+from sqlalchemy import Column, String, Integer, Enum, DateTime, Boolean, Float
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 import uuid
@@ -23,7 +23,8 @@ class WorkOrder(Base):
     product_id = Column(String(100), index=True, nullable=False)
     planned_qty = Column(Integer, nullable=False, default=0)
     due_date = Column(DateTime, nullable=False)
-
+    pred_delivery = Column(Boolean, nullable=True)
+    pred_defect_rate = Column(Float, nullable=True)
     status = Column(OrderStatus, nullable=False, default="S0_PLANNED")
     created_ts = Column(DateTime, nullable=False, default=datetime.utcnow)
     start_ts = Column(DateTime, nullable=True)

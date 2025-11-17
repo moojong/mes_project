@@ -44,6 +44,8 @@
             <th>수량</th>
             <th>상태</th>
             <th>납기</th>
+            <th>납기준수(예측)</th>
+            <th>불량률(예측)</th>
           </tr>
         </thead>
         <tbody>
@@ -73,6 +75,14 @@
 						  {% endif %}
             </td>
             <td>{{ it.due_date.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+              {% if it.pred_delivery %}
+                ✔️
+              {% else %}
+                ❌
+              {% endif %}
+            </td>
+            <td>{{ it.pred_defect_rate }}</td>
           </tr>
           {% endfor %}
           {% if items|length == 0 %}

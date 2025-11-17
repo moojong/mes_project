@@ -6,9 +6,9 @@
     "planned_qty"
   ],
   "label": "actual_time_sec",
-  "mae": 409.4,
-  "rmse": 659.7,
-  "score": 0.7021725544305075,
+  "mae": 402.57,
+  "rmse": 629.36,
+  "score": 0.7289340947445169,
   "n_train": 1360,
   "n_test": 340,
   "product_classes": [

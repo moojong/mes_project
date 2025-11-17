@@ -1,0 +1,28 @@
+{
+  "features": [
+    "product_encoded",
+    "planned_qty",
+    "month",
+    "day_of_week",
+    "days_to_due"
+  ],
+  "delivery_classification_label": "is_on_time",
+  "quality_regression_label": "defect_rate",
+  "delivery_classification_loss": 0.2792760729789734,
+  "delivery_classification_accuracy": 0.9352940917015076,
+  "quality_regression_loss": 76.8249740600586,
+  "quality_regression_mae": 6.5661091804504395,
+  "n_train": 680,
+  "n_test": 170,
+  "product_classes": [
+    "GAS-300",
+    "HUMID-400",
+    "MULTI-500",
+    "MULTI-501",
+    "PRES-200",
+    "PRES-201",
+    "TEMP-100",
+    "TEMP-101",
+    "TEMP-102"
+  ]
+}

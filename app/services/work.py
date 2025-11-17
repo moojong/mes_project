@@ -9,9 +9,12 @@ from models.master_product import MasterProduct
 from models.quality_inspection import QualityInspection
 from models.quality_result import QualityResult
 from datetime import datetime
+from datetime import datetime
+from fastapi import Request
 
-from models.master_operation import MasterOperation
-from models.master_equipment import MasterEquipment
+import pandas as pd
+import tensorflow as tf
+from tensorflow import keras
 
 def list_orders(db: Session):
     """작업지시 목록 조회 (제품 정보 포함)"""
@@ -22,6 +25,8 @@ def list_orders(db: Session):
             WorkOrder.planned_qty,
             WorkOrder.status,
             WorkOrder.due_date,
+            WorkOrder.pred_delivery,
+            WorkOrder.pred_defect_rate,
             MasterProduct.name.label("product_name"),
         )
         .join(MasterProduct, WorkOrder.product_id == MasterProduct.product_id)
@@ -40,6 +45,8 @@ def list_orders(db: Session):
             "planned_qty": r.planned_qty,
             "status": r.status,
             "due_date": r.due_date,
+            "pred_delivery": r.pred_delivery,
+            "pred_defect_rate": r.pred_defect_rate,
         })
 
 		# 제품 리스트 추가
@@ -51,7 +58,7 @@ def list_orders(db: Session):
         "products": products
     }
 
-def create_order(db: Session, product_id: str, planned_qty_raw: str, due_date_raw: str):
+def create_order(request: Request, db: Session, product_id: str, planned_qty_raw: str, due_date_raw: str):
     """작업지시 생성 (라우터에서 받은 원시 문자열을 변환/저장)"""
     planned_qty = int(planned_qty_raw)
     due_dt = datetime.fromisoformat(due_date_raw)  # 'YYYY-MM-DDTHH:MM' 형태 지원
@@ -62,9 +69,52 @@ def create_order(db: Session, product_id: str, planned_qty_raw: str, due_date_ra
         due_date=due_dt,
         status="S0_PLANNED",
     )
-    db.add(order)
+    new_order = predict_delivery_and_quality(request,db, order)
+
+    db.add(new_order)
     db.commit()
     db.refresh(order)
+    return order
+
+def predict_delivery_and_quality(request: Request, db: Session, order: WorkOrder):
+
+    # 모델, 스케일러, 인코더 로드
+    model = request.app.state.ai_models["dnn_delivery_quality_model"]
+    scaler = request.app.state.ai_models["dnn_delivery_quality_scaler"]
+    encoder = request.app.state.ai_models["dnn_delivery_quality_encoder"]
+
+    df = pd.DataFrame([{
+        'product_id': order.product_id,
+        'planned_qty': order.planned_qty,
+        'due_date': order.due_date,
+        'created_ts': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }])
+    # 특징 추출
+    df['created_ts'] = pd.to_datetime(df['created_ts']) + pd.Timedelta(hours=9) # 한국시간 보정
+    df['month'] = df['created_ts'].dt.month
+    df['day_of_week'] = df['created_ts'].dt.dayofweek
+    df['days_to_due'] = (df['due_date'] - df['created_ts']).dt.days
+
+    # product_id 인코딩
+    df['product_encoded'] = encoder.transform(df[['product_id']])
+
+    # 예측에 사용할 특징 선택
+    features = ['product_encoded', 'planned_qty', 'month', 'day_of_week', 'days_to_due']
+    df_features = df[features].values
+    
+    # 정규화
+    features_scaled = scaler.transform(df_features)
+
+    # 예측
+    pred_delivery, pred_defect_rate = model.predict(features_scaled)
+    print(pred_delivery, pred_defect_rate)
+    pred_delivery = bool((pred_delivery > 0.5).item())
+    pred_defect_rate = float(pred_defect_rate.item())
+    
+    # 작업지시에 예측 결과 저장
+    order.pred_delivery = pred_delivery
+    order.pred_defect_rate = round(pred_defect_rate, 1)
+
     return order
 
 def get_order_detail(db: Session, order_id: str):
@@ -76,6 +126,8 @@ def get_order_detail(db: Session, order_id: str):
             WorkOrder.planned_qty,
             WorkOrder.status,
             WorkOrder.due_date,
+            WorkOrder.pred_delivery,
+            WorkOrder.pred_defect_rate,
             WorkOrder.created_ts,
             WorkOrder.start_ts,
             WorkOrder.end_ts,
@@ -95,6 +147,8 @@ def get_order_detail(db: Session, order_id: str):
         "planned_qty": row.planned_qty,
         "status": row.status,
         "due_date": row.due_date,
+        "pred_delivery": row.pred_delivery,
+        "pred_defect_rate": row.pred_defect_rate,
         "created_ts": row.created_ts,
         "start_ts": row.start_ts,
         "end_ts": row.end_ts,

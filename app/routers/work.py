@@ -21,12 +21,13 @@ def list_orders(request: Request, db: Session = Depends(get_db)):
 
 @router.post("/orders")
 def create_order(
+    request: Request,
     db: Session = Depends(get_db),
     product_id: str = Form(...),
     planned_qty: str = Form(...),   # 서비스에서 int로 변환
     due_date: str = Form(...),      # 서비스에서 datetime으로 변환
 ):
-    svc.create_order(db, product_id, planned_qty, due_date)
+    svc.create_order(request, db, product_id, planned_qty, due_date)
     return RedirectResponse(url="/work/orders", status_code=303)
 
 @router.get("/orders/{order_id}", response_class=HTMLResponse)

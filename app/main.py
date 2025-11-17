@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from core.templates import templates
 from core.init_database import create_tables
 from core.init_master_data import seed_master_data
+from core.load_ai_resource import setup_global_ai_assets
 # 라우터 등록
 from routers import work
 from routers import dashboard
@@ -19,6 +20,7 @@ app = FastAPI(title="MES Project")
 def startup_event():
     create_tables()
     seed_master_data()
+    setup_global_ai_assets(app)
     print("데이터베이스 테이블 초기화 완료")
     from services.ai_production_qty_prediction import get_production_qty_sklearn_service, get_production_qty_tensorflow_service
     get_production_qty_sklearn_service()

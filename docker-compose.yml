@@ -24,5 +24,18 @@ services:
     env_file:
       - .env                       # 환경 변수
 
+  scada:
+    build:
+      context: ./scada
+      dockerfile: Dockerfile
+    container_name: scada
+    depends_on:
+      - server
+    environment:
+      - SERVER_URL=http://server:8000
+      - INTERVAL=10
+    restart: unless-stopped
+
+
 volumes:
   pgdata:                          # pgdata 볼륨 정의

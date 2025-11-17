@@ -75,7 +75,10 @@ class ProductionQuantityPredictionService:
             production_rolling_6 = np.mean(past_production[:6])
             production_rolling_24 = np.mean(past_production[:24]) if len(past_production) >= 24 else np.mean(past_production)
             
-            production_trend_6 = (production_lag_1 - production_lag_6) / (production_lag_6)
+            if production_lag_6 == 0:
+                production_trend_6 = 0.0
+            else:
+                production_trend_6 = (production_lag_1 - production_lag_6) / production_lag_6
             
             X = np.array([[
                 month, day, day_of_week, week_of_year,
