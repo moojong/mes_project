@@ -1,0 +1,13 @@
+{
+  "features": [
+    "temperature",
+    "vibration",
+    "current",
+    "rpm",
+    "pressure"
+  ],
+  "label": "status",
+  "accuracy": 0.8426259466868158,
+  "n_train": 455270,
+  "n_test": 113818
+}

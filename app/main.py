@@ -12,6 +12,7 @@ from core.load_ai_resource import setup_global_ai_assets
 from routers import work
 from routers import dashboard
 from routers import quality
+from routers import equipment
 
 app = FastAPI(title="MES Project")
 
@@ -55,3 +56,4 @@ def db_health(db: Session = Depends(get_db)):
 app.include_router(work.router, prefix="/work")
 app.include_router(dashboard.router, prefix="/dashboard")
 app.include_router(quality.router, prefix="/quality")
+app.include_router(equipment.router, prefix="/equipment")

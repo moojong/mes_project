@@ -13,5 +13,10 @@ from models import master_inspection_item
 from models.work_order import WorkOrder
 from models.work_result import WorkResult
 
+from models.quality_inspection import QualityInspection
+from models.quality_result import QualityResult
+from models.equipment_sensor_data import EquipmentSensorData
+
+
 def create_tables():
     Base.metadata.create_all(bind=engine)

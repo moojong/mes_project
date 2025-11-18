@@ -13,10 +13,12 @@ def setup_global_ai_assets(app: FastAPI):
         
         # DNN 모델 로드
         models_state["dnn_delivery_quality_model"] = keras.models.load_model("ai_models/delivery_quality/dnn_delivery_quality_model.keras")
+        models_state["dnn_sensor_anomaly_detection_model"] = keras.models.load_model("ai_models/sensor_anomaly/dnn_sensor_anomaly_detection_model.keras")
         
         # 2. 스케일러/인코더 로드
         models_state["dnn_delivery_quality_scaler"] = joblib.load("ai_models/delivery_quality/dnn_delivery_quality_scaler.pkl")
         models_state["dnn_delivery_quality_encoder"] = joblib.load("ai_models/delivery_quality/dnn_delivery_quality_label.pkl")
+        models_state["dnn_sensor_anomaly_detection_scaler"] = joblib.load("ai_models/sensor_anomaly/dnn_sensor_anomaly_detection_scaler.pkl")
         
         # 3. 모델 메타 정보 로드
         with open("ai_models/delivery_quality/dnn_delivery_quality_info.json", "r") as f:
