@@ -45,7 +45,7 @@ def list_equipment_sensor_data(request: Request, db: Session):
         "total": len(items),
     }
 
-def create_equipment_sensor_data(Request, db: Session, data: dict):
+def create_equipment_sensor_data(request: Request, db: Session, data: dict):
     """센서 데이터 등록"""
     sensor_data = EquipmentSensorData(
         timestamp = data['timestamp'],

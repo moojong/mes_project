@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}기계부품 분류{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h3 class="mb-4 fw-bold">기계부품 분류</h3>
+    <input type="file" id="fileInput" accept="image/*">
+    <br><br>
+    
+    <img id="preview" style="max-width: 300px;">
+    <p id="result"></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script>
+        const CLASS_LABELS = ['food', 'glass', 'metal', 'paper', 'plastic'];
+        let model;
+
+        // 모델 로드
+        (async () => {
+            model = await tf.loadGraphModel('/static/trash_model/model.json');
+        })();
+
+        // 파일 선택 시
+        document.getElementById('fileInput').onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file || !model) return;
+
+            // 이미지 미리보기
+            const preview = document.getElementById('preview');
+            // DOMStringURL 사용, 메모리에 저장된 이미지 경로로 이미지 미리보기
+            preview.src = URL.createObjectURL(file);  
+
+            // 예측
+            const img = new Image();
+            img.onload = async () => {
+                const tensor = tf.browser.fromPixels(img) // img 객체의 픽셀 데이터를 추출하여 텐서 객체로 변환
+                    .resizeNearestNeighbor([224, 224])
+                    .toFloat()
+                    .div(255.0)
+                    .expandDims(0);
+
+                const prediction = model.predict(tensor);
+                const probs = await prediction.data();
+                const predictedIndex = probs.indexOf(Math.max(...probs));
+                
+                document.getElementById('result').textContent = 
+                    '예측 결과: ' + CLASS_LABELS[predictedIndex];
+                
+                partName = CLASS_LABELS[predictedIndex];
+                const response = await fetch(`/part/spec/${partName}`);
+                const data = await response.json();
+                document.getElementById('result').textContent +=
+                    ' 종류: ' + data.part_spec;
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('part_id', data.part_id);
+                formData.append('part_name', partName);
+
+                const uploadResponse = await fetch('/part/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const uploadResult = await uploadResponse.json();
+                console.log('업로드 결과:', uploadResult);
+
+                tensor.dispose();
+                prediction.dispose();
+            };
+            img.src = preview.src;
+        };
+    </script>
+</div>
+{% endblock %}

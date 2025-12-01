@@ -8,7 +8,7 @@ from models import master_equipment
 # 품질관리 마스터
 from models import master_defect_code
 from models import master_inspection_item
-
+from models import master_part
 
 def seed_master_data():
     """마스터 데이터 초기화 (존재 시 건너뜀)"""
@@ -138,5 +138,19 @@ def seed_master_data():
         print(f"{len(items)}개 품질 검사 항목 생성 완료")
         
         print("마스터 데이터 시딩 완료")
+        # 7) 부품 항목
+        parts = [
+            {"part_name": "food", "part_spec": "종이류"},
+            {"part_name": "glass", "part_spec": "유리류"},
+            {"part_name": "metal", "part_spec": "금속류"},
+            {"part_name": "paper", "part_spec": "종이류"},
+            {"part_name": "plastic", "part_spec": "플리스틱류"},
+        ]
+        for p in parts:
+            exists = db.query(master_part.MasterPart).filter(master_part.MasterPart.part_name == p["part_name"], master_part.MasterPart.part_spec == p["part_spec"]).first()
+            if not exists:
+                db.add(master_part.MasterPart(**p))
+        db.commit()
+        print(f"{len(parts)}개 부품 항목 생성 완료")
     finally:
         db.close()

@@ -16,6 +16,8 @@ from models.work_result import WorkResult
 from models.quality_inspection import QualityInspection
 from models.quality_result import QualityResult
 from models.equipment_sensor_data import EquipmentSensorData
+from models.master_part import MasterPart
+from models.part import Part
 
 
 def create_tables():

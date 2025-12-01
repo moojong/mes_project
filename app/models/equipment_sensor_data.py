@@ -17,4 +17,4 @@ class EquipmentSensorData(Base):
     current = Column(Float, nullable=True)          # 전류 (A)
     rpm = Column(Integer, nullable=True)            # RPM
     pressure = Column(Float, nullable=True)         # 압력 (bar)
-    status = Column(Boolean, nullable=True)         # 상태 (0: 정상, 1: 이상)
+    status = Column(Integer, nullable=True, default=0)         # 상태 (0: 정상, 1: 이상)

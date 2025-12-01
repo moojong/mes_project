@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}설비 센서 데이터{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">설비 센서 데이터</h2>
+
+  <div class="card">
+    <div class="card-body">
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>일시</th>
+            <th>설비 ID</th>
+            <th>온도(°C)</th>
+            <th>진동(mm/s)</th>
+            <th>전류(A)</th>
+            <th>RPM</th>
+            <th>압력(Pa)</th>
+            <th>상태</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in items %}
+          <tr>
+            <td class="text-nowrap">{{ it.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>{{ it.equipment_id }}</td>
+            <td>{{ it.temperature }}</td>
+            <td>{{ it.vibration }}</td>
+            <td>{{ it.current }}</td>
+            <td>{{ it.rpm }}</td>
+            <td>{{ it.pressure }}</td>
+            <td>
+              {% if it.status == 1 %}
+                <span class="badge bg-danger">이상</span>
+              {% else %}
+                <span class="badge bg-success">정상</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+
+          {% if items|length == 0 %}
+          <tr><td colspan="8" class="text-center text-muted py-4">데이터가 없습니다.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+
+      <div class="text-muted small">총 {{ total }}건</div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

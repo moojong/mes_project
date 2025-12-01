@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from core.database import get_db 
@@ -13,9 +14,11 @@ from routers import work
 from routers import dashboard
 from routers import quality
 from routers import equipment
+from routers import image
+from routers import part
 
 app = FastAPI(title="MES Project")
-
+app.mount("/static", StaticFiles(directory="public"), name="static")
 
 @app.on_event("startup")
 def startup_event():
@@ -57,3 +60,5 @@ app.include_router(work.router, prefix="/work")
 app.include_router(dashboard.router, prefix="/dashboard")
 app.include_router(quality.router, prefix="/quality")
 app.include_router(equipment.router, prefix="/equipment")
+app.include_router(image.router, prefix="/image")
+app.include_router(part.router, prefix="/part")

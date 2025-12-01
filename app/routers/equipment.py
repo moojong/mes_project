@@ -14,7 +14,7 @@ def list_equipment_sensor_data(
     request: Request, db: Session = Depends(get_db)):
     
     # 장비 센서 데이터 목록 조회
-    data = svc.list_equipment_sensor_data(db)
+    data = svc.list_equipment_sensor_data(request, db)
     return templates.TemplateResponse(
         "equipment_sensor_list.html",
         {"request": request, **data}    

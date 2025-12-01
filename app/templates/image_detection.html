@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% block title %}실시간 칩 탐지{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h3 class="mb-4 fw-bold">실시간 부품 탐지</h3>
+
+    <!-- 모델 로딩 상태 -->
+    <div id="model-loading-status" class="alert alert-warning d-flex align-items-center d-none" role="alert">
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        <strong>AI 모델 로딩 중...</strong> 잠시만 기다려 주세요.
+    </div>
+
+    <!-- 컨트롤 버튼 및 FPS 표시 -->
+    <div class="mb-4 d-flex align-items-center gap-3">
+        <button
+            id="start-button"
+            class="btn btn-success px-4"
+            disabled
+        >
+            웹캠 시작
+        </button>
+        <button
+            id="stop-button"
+            class="btn btn-danger px-4"
+            disabled
+        >
+            웹캠 중지
+        </button>
+        <div id="fps-display" class="fw-bold fs-5 text-primary d-none">
+            FPS: <span id="fps-value">0</span>
+        </div>
+    </div>
+
+    <!-- 비디오 및 캔버스 영역 -->
+    <div class="position-relative d-inline-block shadow-lg rounded-3 overflow-hidden">
+        <!-- 비디오는 숨기고, 캔버스에만 결과를 그림 -->
+        <video
+            id="video-feed"
+            autoplay
+            playsinline
+            muted
+            width="640"
+            height="480"
+            style="display: none;"
+        ></video>
+        <canvas
+            id="detection-canvas"
+            width="640"
+            height="480"
+        ></canvas>
+    </div>
+
+    <!-- 안내 메시지 -->
+    <div id="info-message" class="mt-4 text-center text-muted fs-5">
+        '웹캠 시작' 버튼을 클릭하여 실시간 탐지를 시작하세요.
+    </div>
+</div>
+
+<!-- 
+    === TensorFlow.js 및 클라이언트 로직 스크립트 ===
+-->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script>
+    // === DOM 요소 참조 ===
+    const modelLoadingStatus = document.getElementById('model-loading-status');
+    const startButton = document.getElementById('start-button');
+    const stopButton = document.getElementById('stop-button');
+    const fpsDisplay = document.getElementById('fps-display');
+    const fpsValue = document.getElementById('fps-value');
+    const videoFeed = document.getElementById('video-feed');
+    const detectionCanvas = document.getElementById('detection-canvas');
+    const infoMessage = document.getElementById('info-message');
+
+    // === 전역 상태 및 설정 ===
+    let model = null;
+    let isDetecting = false;
+    let streamRef = null;
+    let animationRef = null;
+    const ctx = detectionCanvas.getContext('2d');
+
+    // FastAPI static 설정에 맞게 경로 수정 (이전과 동일한 가정)
+    const MODEL_URL = '/static/chip_detection_model/model.json';
+    
+    // 클래스 레이블 (React 코드에서 가져옴)
+    const CLASS_LABELS = ['DIP-14', 'QFN', 'SOP-16', 'SOP-8', 'SOT-223', 'TO-252', 'TSSOP-8'];
+    const CONFIDENCE_THRESHOLD = 0.6;
+    const INPUT_SIZE = 640; // 모델 입력 크기
+
+    // 모델 로드
+    const loadModel = async () => {
+        modelLoadingStatus.classList.remove('d-none');
+        startButton.disabled = true;
+
+        try {
+            model = await tf.loadGraphModel(MODEL_URL);
+            console.log('모델 로드 완료');
+            startButton.disabled = false;
+            infoMessage.textContent = "'웹캠 시작' 버튼을 클릭하여 실시간 탐지를 시작하세요.";
+        } catch (error) {
+            console.error('모델 로드 실패:', error);
+            alert('모델 로드에 실패했습니다. (경로 확인 요망)');
+        } finally {
+            modelLoadingStatus.classList.add('d-none');
+        }
+    };
+
+    // 웹캠 시작
+    const startWebcam = async () => {
+        if (!model || isDetecting) return;
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480 }
+            });
+            
+            videoFeed.srcObject = stream;
+            streamRef = stream;
+            
+            videoFeed.onloadedmetadata = () => {
+                videoFeed.play();
+                isDetecting = true;
+                
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                fpsDisplay.classList.remove('d-none');
+                infoMessage.classList.add('d-none');
+                
+                // 탐지 루프 시작
+                detectObjects();
+            };
+        } catch (error) {
+            console.error('웹캠 접근 실패:', error);
+            alert('웹캠 접근에 실패했습니다. 브라우저 권한을 확인하세요.');
+        }
+    };
+
+    // 웹캠 중지
+    const stopWebcam = () => {
+        if (streamRef) {
+            streamRef.getTracks().forEach(track => track.stop());
+            streamRef = null;
+        }
+        if (animationRef) {
+            cancelAnimationFrame(animationRef);
+            animationRef = null;
+        }
+        
+        ctx.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height);
+        isDetecting = false;
+        
+        startButton.disabled = false;
+        stopButton.disabled = true;
+        fpsDisplay.classList.add('d-none');
+        infoMessage.classList.remove('d-none');
+        infoMessage.textContent = "탐지가 중지되었습니다. 다시 시작하려면 '웹캠 시작'을 누르세요.";
+    };
+
+    // 객체 탐지 루프 (React 코드의 핵심 로직)
+    const detectObjects = async () => {
+        if (!isDetecting || !model || videoFeed.readyState !== videoFeed.HAVE_ENOUGH_DATA) {
+            animationRef = requestAnimationFrame(detectObjects);
+            return;
+        }
+        
+        const startTime = performance.now();
+
+        // 이미지 전처리 및 텐서 생성 (tf.tidy로 메모리 누수 방지)
+        const [output, image] = tf.tidy(() => {
+            const videoTensor = tf.browser.fromPixels(videoFeed);
+            const imageTensor = tf.image.resizeBilinear(videoTensor, [INPUT_SIZE, INPUT_SIZE])
+                .div(255.0)
+                .expandDims(0);
+            
+            // 모델 실행
+            const predictions = model.execute(imageTensor);
+            return [predictions.arraySync()[0], imageTensor];
+        });
+        
+        // 캔버스 그리기 초기화
+        ctx.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height);
+        ctx.drawImage(videoFeed, 0, 0, detectionCanvas.width, detectionCanvas.height);
+
+        // 예측 결과 처리
+        const numDetections = output[0].length;
+        
+        for (let i = 0; i < numDetections; i++) {
+            let maxConf = 0;
+            let maxClassId = 0;
+            
+            // 7개 클래스 중 최대 확률 찾기
+            for (let j = 0; j < CLASS_LABELS.length; j++) {
+                const conf = output[4 + j][i];
+                if (conf > maxConf) {
+                    maxConf = conf;
+                    maxClassId = j;
+                }
+            }
+            
+            if (maxConf > CONFIDENCE_THRESHOLD) {
+                // 바운딩 박스 좌표 (cx, cy, w, h)
+                const cx = output[0][i];
+                const cy = output[1][i];
+                const w = output[2][i];
+                const h = output[3][i];
+                
+                // corner format (x1, y1, width, height)으로 변환
+                const x1 = cx - w / 2;
+                const y1 = cy - h / 2;
+                const width = w;
+                const height = h;
+                
+                const label = CLASS_LABELS[maxClassId] || `Class ${maxClassId}`;
+                
+                // 캔버스 크기에 맞게 스케일링 (640x640 -> 640x480)
+                const scaleX = detectionCanvas.width / INPUT_SIZE;
+                const scaleY = detectionCanvas.height / INPUT_SIZE; 
+                
+                const drawX = x1 * scaleX;
+                const drawY = y1 * scaleY;
+                const drawW = width * scaleX;
+                const drawH = height * scaleY;
+                
+                // 박스 그리기
+                ctx.beginPath();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "#00FF7F"; // 밝은 녹색
+                ctx.strokeRect(drawX, drawY, drawW, drawH);
+                
+                // 레이블 배경 및 텍스트
+                ctx.fillStyle = "#00FF7F";
+                const text = `${label} (${maxConf.toFixed(2)})`;
+                const textWidth = ctx.measureText(text).width;
+                
+                ctx.fillRect(drawX, drawY - 20, textWidth + 10, 20);
+                
+                ctx.font = "14px Arial";
+                ctx.fillStyle = "#000000"; // 검은색 텍스트
+                ctx.fillText(text, drawX + 5, drawY - 5);
+            }
+        }
+
+        tf.dispose(output);
+        
+        // FPS 계산 및 표시
+        const endTime = performance.now();
+        const currentFps = Math.round(1000 / (endTime - startTime));
+        fpsValue.textContent = currentFps;
+
+        // 다음 프레임 요청
+        animationRef = requestAnimationFrame(detectObjects);
+    };
+
+    // 초기화
+    document.addEventListener('DOMContentLoaded', () => {
+        // 모델 로드 시작
+        loadModel();
+        
+        // 버튼 이벤트 리스너 설정
+        startButton.addEventListener('click', startWebcam);
+        stopButton.addEventListener('click', stopWebcam);
+        
+        // 페이지를 떠날 때 웹캠 정리 (cleanup)
+        window.addEventListener('beforeunload', stopWebcam);
+    });
+</script>
+{% endblock %}
