@@ -24,18 +24,28 @@ services:
     env_file:
       - .env                       # 환경 변수
 
-  scada:
-    build:
-      context: ./scada
-      dockerfile: Dockerfile
-    container_name: scada
-    depends_on:
-      - server
-    environment:
-      - SERVER_URL=http://server:8000
-      - INTERVAL=10
-    restart: unless-stopped
+  # scada:
+  #   build:
+  #     context: ./scada
+  #     dockerfile: Dockerfile
+  #   container_name: scada
+  #   depends_on:
+  #     - server
+  #   environment:
+  #     - SERVER_URL=http://server:8000
+  #     - INTERVAL=10
+  #   restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama
+    container_name: ollama-server
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: always
 
 
 volumes:
-  pgdata:                          # pgdata 볼륨 정의
+  pgdata:
+  ollama_data:                         # pgdata 볼륨 정의

@@ -16,9 +16,19 @@ from routers import quality
 from routers import equipment
 from routers import image
 from routers import part
+from routers import ai_chat
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="MES Project")
 app.mount("/static", StaticFiles(directory="public"), name="static")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 개발 환경: 모든 origin 허용
+    # allow_origins=["http://localhost:8000"],  # 프로덕션: 특정 origin만 허용
+    allow_credentials=True,
+    allow_methods=["*"],  # 모든 HTTP 메소드 허용
+    allow_headers=["*"],  # 모든 헤더 허용
+)
 
 @app.on_event("startup")
 def startup_event():
@@ -62,3 +72,4 @@ app.include_router(quality.router, prefix="/quality")
 app.include_router(equipment.router, prefix="/equipment")
 app.include_router(image.router, prefix="/image")
 app.include_router(part.router, prefix="/part")
+app.include_router(ai_chat.router, prefix="/ai_chat")

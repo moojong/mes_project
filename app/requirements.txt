@@ -15,3 +15,8 @@ seaborn==0.13.2
 joblib==1.5.2
 tensorflow==2.19.0
 scikit-learn==1.6.1
+transformers
+accelerate
+torch
+openai
+google-genai

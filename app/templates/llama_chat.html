@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}LLAMA CHAT{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h3 class="mb-4 fw-bold">LLAMA CHAT</h3>
+    <div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <textarea id="chatDisplay" class="form-control" rows="20" readonly>
+                </textarea>
+            </div>
+            <div class="input-group mb-3">
+                <input type="text" id="chatInput" class="form-control">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" id="sendButton" type="button">
+	                    Send
+	                  </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap and jQuery JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#sendButton').click(function() {
+            const message = $('#chatInput').val();
+            $('#chatDisplay').val($('#chatDisplay').val() + `You: ${message}\n`);
+
+            $.ajax({
+                // url: 'http://127.0.0.1:8080/llama_chat/',
+                url: '/ai_chat/llama/',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ message: message }),
+                success: function(response) {
+                    $('#chatDisplay').val($('#chatDisplay').val() + `Bot: ${response.reply}\n`);
+                },
+                error: function() {
+                    $('#chatDisplay').val($('#chatDisplay').val() + 'Error: Could not reach the server.\n');
+                }
+            });
+
+            // Clear input after sending
+            $('#chatInput').val('');
+        });
+    });
+</script>
+
+{% endblock %}
