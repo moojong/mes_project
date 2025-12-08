@@ -18,6 +18,7 @@ from models.quality_result import QualityResult
 from models.equipment_sensor_data import EquipmentSensorData
 from models.master_part import MasterPart
 from models.part import Part
+from models.vector import Vector
 
 
 def create_tables():

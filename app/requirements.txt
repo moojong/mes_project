@@ -20,3 +20,5 @@ accelerate
 torch
 openai
 google-genai
+pgvector                # PostgreSQL 데이터베이스에 벡터 데이터 저장, 유사도 검색 라이브러리
+pymupdf                 # PDF 파일 처리 라이브러리

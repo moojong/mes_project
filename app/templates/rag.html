@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}RAG AI{% endblock %}
+
+{% block content %}
+  <h2>RAG (Retrieval-Augmented Generation)</h2>
+
+  <form action="/ai_chat/rag/upload" method="post" enctype="multipart/form-data" style="margin-bottom: 30px;">
+    <label for="upload_file">Upload Document:</label>
+    <input type="file" name="upload_file" required />
+    <button type="submit">Upload & Embed</button>
+  </form>
+	
+	{% if upload_result %}
+    <div style="color: green; margin-bottom: 20px;">
+      <strong>Upload Result:</strong> {{ upload_result }}
+    </div>
+  {% endif %}
+  
+  <!-- 질문 입력 영역 -->
+  <form action="/ai_chat/rag/chat" method="post">
+    <label for="model">Model:</label>
+		<select name="model" id="model">
+      <option value="gpt" {% if selected_model == 'gpt' %}selected{% endif %}>GPT</option>
+      <option value="gemini" {% if selected_model == 'gemini' %}selected{% endif %}>Gemini</option>
+      <option value="qwen2.5:7b" {% if selected_model == 'qwen2.5:7b' %}selected{% endif %}>Qwen</option>
+      <option value="gemma3:4b" {% if selected_model == 'gemma3:4b' %}selected{% endif %}>Gemma</option>      
+    </select>
+
+    <input type="text" name="user_input" placeholder="Ask something..." style="width: 300px;" required />
+    <button type="submit">Send</button>
+  </form>
+
+  {% if user_input %}
+    <div style="margin-top: 20px;">
+      <strong>You:</strong> {{ user_input }}
+    </div>
+  {% endif %}
+
+  {% if response %}
+    <div style="margin-top: 10px;">
+      <strong>RAG Response:</strong> {{ response }}
+    </div>
+  {% endif %}
+  
+{% endblock %}

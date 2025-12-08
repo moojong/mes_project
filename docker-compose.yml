@@ -14,7 +14,7 @@ services:
       - .env                       # 환경 변수
 
   db:
-    image: postgres:15
+    image: ankane/pgvector:v0.5.1
     container_name: postgres-db
     restart: always                # 실패 시 자동 복구
     ports:
